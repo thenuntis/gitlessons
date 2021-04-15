@@ -1,0 +1,231 @@
+﻿CASE 
+    sd.analitic 
+     WHEN IN (417018,417052,417053,417054,417055,417056,417057,417058,417059,417076) THEN sum_teh
+     WHEN IN (417075,417072,417044,417066,417045,417060,417046,417067,417047,417065,
+     417015,417016,417017,417071,417048,417061,417068,417049,417064,
+     417069,417050,417062,417070,417051,417133) THEN sum_rem,
+     WHEN IN (417126,417705) THEN sum_izg,
+     WHEN IN (417128,417129) THEN sum_rec, 
+END AS kodprich,;
+
+                                                       
+#START CODE BLOCK
+local cSql, oSql, oConnect,xx
+
+xx=1
+oConnect := SpConnect():new()
+do while (xx<=10)
+      IF oConnect:connect('\\srv-ads\ads\universal-7.add',,'transit','transit',,)
+        if osql
+          monitor(osql,xx)
+        else
+          oSql := SpSql():new(,,oConnect):create()             // подключение к БД ПрАТ
+          monitor(osql,{xx,13})
+        endif
+      else
+        warning(,"not connected")
+      endif
+      
+      xx++
+enddo
+#END CODE BLOCK
+
+select top 1 * from client
+
+
+
+select * from client where name like '%Філе Особливе свиняче (вирізка)%'
+356144 = 356145(6)
+ 
+select * from client where name like '%Лопатка Святкова к/в%'
+338995 = 338996(8)
+
+
+IF(DC000123->FILIAL=2684,
+   IF(DC000123->PACKER#0,
+      EvalMemoPar([local C060586:=sqlseekinalias(client,kodkli=+STR(sqlseekinalias(dc000117,priznak=445 and card_os <> 0 and first_driv=+STR(DC000123->packer),{|o|o:card_os})),{|o|o:name})if LEN(C060586) == 0   C060586:=sqlseekinalias(client,kodkli=+STR(sqlseekinalias(dc000117,priznak=445 and card_os <> 0 and second_driv=+STR(DC000123->packer),{|o|o:card_os})),{|o|o:name})endifreturn C060586],
+                  
+                 ),
+      EvalMemoPar([local C060586:=sqlseekinalias(client,kodkli=+STR(sqlseekinalias(dc000117,priznak=445 and card_os <> 0 and first_driv=+STR(DC000123->expeditor),{|o|o:card_os})),{|o|o:name})if LEN(C060586) == 0   C060586:=sqlseekinalias(client,kodkli=+STR(sqlseekinalias(dc000117,priznak=445 and card_os <> 0 and second_driv=+STR(DC000123->expeditor),{|o|o:card_os})),{|o|o:name})endifreturn C060586],
+                  
+                 )
+     ),
+   EvalMemoPar([local C060586:=sqlseekinalias(client,kodkli=+STR(sqlseekinalias(dc000117,priznak=445 and card_os <> 0 and first_driv=+STR(DC000123->expeditor),{|o|o:card_os})),{|o|o:name})if LEN(C060586) == 0   C060586:=sqlseekinalias(client,kodkli=+STR(sqlseekinalias(dc000117,priznak=445 and card_os <> 0 and second_driv=+STR(DC000123->expeditor),{|o|o:card_os})),{|o|o:name})endifreturn C060586],
+               
+              )
+  )
+
+
+
+
+   IF nPrizOpl=1
+      nDiff := SetRound(nSummaChk-0.05,0.1)-nSummaChk
+   ENDIF
+
+IF nTypeVes=2
+	nTaraKol:=0
+	nTaraVes:=0
+	aEdit:={{,,TrimSeekIn("CLIENT",SDKODM,NIL,"INCLIENT",)},{,,"№ позици тары "+STR(nTara),,,.T.},;
+          {"nOtves","#####.###","Вес продукции/кол.шт.",,,.T.},;
+          {"nTaraKol","#####.###","К-во тары",nTarakol,,.T.},;
+          {"nTaraVes","#####.###","Вес тары",nTaraVes,,.T.},;
+          {{||SeekInAlias('CLIENT',nKodTara,,'inclient')},"@S40","Тип тары",,;
+             {||i:=SetGruppa(1,.F.,,,,,nKodTara,26,26)[2],nKodTara:=if(i#0,i,nKodTara)},.T.,,.T.},}
+	IF EditScreen(,,"Ручной воод данных",aEdit,,,{100,100})
+  
+		IF DC000012->KLI_NET = 24077    //походи пока снимаем только для фирменной торговли
+			nPohod:=SetRound(if(nType_poh<2,nOtves/100*nPrc_poh,nPrc_poh),0.001)
+		ENDIF  
+  
+		nOtves:=SetRound(nOtves-nPohod,0.001)
+		nVibRes:=1
+	ENDIF
+ENDIF
+SDVES:=IF(TrimSeekIn("CLIENT",SDKODM,[CLIENT->ediz],"INCLIENT",)=SetEval(["шт"]),SDKOL*SPObK(606,SDKODM),SDKOL)
+
+if nTaraKol#0.or.nTaraVes#0
+  cTaraSQL:=" select distinct numtara from dc000019 "
+  cTaraSQL+=" where kodotgr in (select uniquesod from sd000012 where koddoc="+STR(DC000012->koddoc)+")"
+  cTaraSQL+=" order by 1 "
+  oTaraSQL:= SpSql():new(DirCommon):create()
+  oTaraSQL:ExecuteDirect(cTaraSQL)
+  do while !oTaraSQL:DataArea:EOf()
+    AADD(aTara,oTaraSQL:DataArea:numtara)
+    oTaraSQL:DataArea:skip()
+  enddo
+  oTaraSQL:Destroy()
+
+  do while len(aTara)>0.and.nSkip<=aTara[len(aTara)]
+    AADD(aFreeTara,0)
+    nSkip++
+  enddo
+  nSkip:=1
+  do while nSkip<=len(aTara)
+    aFreeTara[aTara[nSkip]]:=1
+    nSkip++
+  enddo
+  nSkip:=1
+  do while nSkip<=len(aFreeTara).and.aFreeTara[nSkip]=1
+    nSkip++
+  enddo
+  nTara:=if(nSkip<len(aFreeTara),nSkip,len(aFreeTara)+1)
+endif
+
+cTaraSQL:=" select count(*) as kol from dc000019  "
+cTaraSQL+=" where kodotgr in (select uniquesod from sd000012 where koddoc="+STR(dc000012->koddoc)+") "
+cTaraSQL+=" and numtara="+STR(nTara)
+
+oTaraSQL := SpSql():new(DirCommon):create()
+oTaraSQL:ExecuteDirect(cTaraSQL)
+//oTaraSQL:SqlView()
+if(nTara=0,0,nFirst:=oTaraSQL:DataArea:kol)
+oTaraSQL:Destroy()
+
+if nVibRes =1
+  AADD(aFvDubl,{'DCDATAOTV',DATE()})
+  AADD(aFvDubl,{'DCDATA',(DC)->DATA})
+  AADD(aFvDubl,{'DCTIMEVES',GetServerTime()})
+  AADD(aFvDubl,{'DCKODM',(SD)->KODM})
+  AADD(aFvDubl,{'DCNUMTARA',nTara})
+  AADD(aFvDubl,{'DCKOL',nOtves})
+  AADD(aFvDubl,{'DCPOHOD',nPohod})
+  AADD(aFvDubl,{'DCKODOTGR',(SD)->uniquesod})
+  nVes:=SetRound(IF(TrimSeekIn("CLIENT",(SD)->KODM,[CLIENT->ediz],"INCLIENT",)=SetEval(["шт"]),nOtves*SPObK(606,(SD)->KODM),nOtves),0.001)
+  AADD(aFvDubl,{'DCVES',nVes})
+  if nFirst=0
+    AADD(aFvDubl,{'DCTARA',nTaraVes})
+    AADD(aFvDubl,{'DCTYPE_TARA',nKodTara})
+    AADD(aFvDubl,{'DCFIRST',1})
+    AADD(aFvDubl,{'DCKOLTARA',nTaraKol})
+    N012042434950:=nTara
+    N012054525040:=nTaraVes
+    N012057211060:=nKodTara
+    N012050567340:=nTaraKol
+    odoc:oStaticUnderBrowse:Parent:Owner:SetTitle("Отгрузка No "+LTRIM(RTRIM(DCNUMBER))+" на "+;
+      TrimSeekIn("CLIENT",DCKODIN,NIL,"INCLIENT",)+" (собирается тара № "+STR(N012042434950,5,0)+")")
+  else
+    AADD(aFvDubl,{'DCTYPE_TARA',nKodTara})
+    AADD(aFvDubl,{'DCFIRST',0})
+    AADD(aFvDubl,{'DCTARA',0})
+  endif
+
+
+
+  IF .NOT.NewDublDoc(nDocReg,nDocNum,nDocView,,aFvDubl,,.T.,.T.)
+    lAfterSuccess := .F.
+    RETURN
+  ENDIF
+  d:=seconds()
+  SaveDublDoc()
+  oDoc:InFocus()
+  (DC)->(RecLock(RECNO()))
+  oDoc:oDocBrowse:RefreshAll():ForceStable()
+  if oDoc:getKodDoc()=233
+    oDoc:GetVar("oOtvDoc"):SetShowed(,{||SetSqlFilter(" kodotgr="+STR(sd000012->uniquesod))})
+    oDoc:oDocBrowse:lLockSkipper:=.F.
+    oDoc:DocGoTop()
+    oDoc:oDocBrowse:RefreshAll():ForceStable()
+    oDoc:GetVar("oSDMain"):InFocus()
+  endif
+    if(SPObA(2635,nUserAliasKodKli)=23909.and.N012029921530=2.and.N012039956570=1.and.odoc:getkoddoc()#10,feval('otgr/prn_pos_label.mac',.t.,,{2,nVes}),nil)
+    if(SPObA(2635,nUserAliasKodKli)=23909.and.N012029921530=2.and.N012039956570=2.and.odoc:getkoddoc()#10,feval('otgr/prn_new_label.mac',.t.,,{SD000012->kodm,DC000012->data,nVes,nVes}),nil)
+endif
+
+LOCAL cSQL,oSql
+oSql:=SpSql():new():create()
+cSql:=' UPDATE SD000038 SET price = '+alltrim(str(odocobj:sdfield:summa/odocobj:sdfield:kol))
+cSql+=' ,pricerozn = '+alltrim(str(sqlseekinalias('sd000038','koddoc=4324443 and kodm= '+alltrim(str(odocobj:sdfield:kodm)),{|o|o:pricerozn})))
+cSql+=' WHERE koddoc=4324443 and kodm= '+alltrim(str(odocobj:sdfield:kodm))
+monitor(cSql)
+oSql:executeDirect(cSql)  
+oSql:destroy() 
+
+
+
+
+LOCAL cSQL
+cSql:=' UPDATE SD000038 SET price = '+alltrim(str(odocobj:sdfield:summa/odocobj:sdfield:kol))
+cSql+=' WHERE koddoc=4324443 and kodm= '+alltrim(str(odocobj:sdfield:kodm))
+DoPrvdSQL(cSQL)
+
+
+LOCAL cSQL
+IF (odocobj:sdfield:summ_w_nds/odocobj:sdfield:kol)/1.2 > 0
+    cSql:=' UPDATE SD000038 SET price = '+alltrim(str((odocobj:sdfield:summ_w_nds/odocobj:sdfield:kol)/1.2))
+    cSql+=' WHERE koddoc=4324443 and kodm= '+alltrim(str(odocobj:sdfield:kodm))
+    DoPrvdSQL(cSQL)
+ENDIF
+
+STR(SD000003->summa_norm-SD000003->summa_nac)
+
+
+#START CODE BLOCK
+local oSql,cSql
+
+cSql:=" Select dc.numberofpayment,dc.dataofact,dc2.koddoc as primekod, sd.kodm,sd.inside_num,sd.who"
+cSql+=" From dc000095 dc Inner Join sd000095 sd ON sd.koddoc=dc.koddoc "
+cSql+=" Left JOIN dc000095 dc2 ON sd.who=dc.inclient"
+cSql+=" Left JOIN sd000095 sd2 ON dc2.koddoc=sd2.koddoc"
+cSql+=" where dc.koddoc="+odocobj:odocsql:koddoc
+
+oSql:=SpSql():new():create()
+oSql:executedirect(cSql)
+cSql:=''
+
+Do WHILE !oSql:EOF()
+   
+   cSql+=" update dc000095 set pricerozn="+str(nNewPrice,12,2)+",prnac="+str(nPrcNac,12,2)+" where koddoc="+STR(nKoddoc,11)+";"
+   cSql+=" update sd000095 set pricerozn="+str(nNewPrice,12,2)+",prnac="+str(nPrcNac,12,2)+" where koddoc="+STR(nKoddoc,11)+";"
+Enddo
+#END CODE BLOCK
+select sd.*
+from dc000095 dc
+inner join sd000095 sd on sd.koddoc=dc.koddoc
+where dc.koddoc=21860164
+
+
+
+
+
+O053806:=SetGruppa(2,.F.,,,,,O053806,,16,,,,,,.T.)[2]
+O055422:=SetGruppa(2,.F.,,,,,O055422,,16)[2]
