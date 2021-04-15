@@ -11,11 +11,11 @@ END AS kodprich,;
                                                        
 #START CODE BLOCK
 local cSql, oSql, oConnect,xx
-
+#endo 
 xx=1
 oConnect := SpConnect():new()
 do while (xx<=10)
-      IF oConnect:connect('\\srv-ads\ads\universal-7.add',,'transit','transit',,)
+      IF oConnect:connect('\\srv-td2\td_krm\universal-7.add',,'transit','transit',,)
         if osql
           monitor(osql,xx)
         else
