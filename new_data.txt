@@ -8,7 +8,9 @@
      WHEN IN (417128,417129) THEN sum_rec, 
 END AS kodprich,;
 
-                                                       
+#START CODE BLOCK
+	lorem ipsum
+#END CODE BLOCK
 #START CODE BLOCK
 local cSql, oSql, oConnect,xx
 
