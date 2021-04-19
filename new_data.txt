@@ -9,7 +9,7 @@
 END AS kodprich,;
 
 #START CODE BLOCK
-	lorem ipsum
+	lorem ipsum lore nomus isno devus acro totus
 #END CODE BLOCK
 #START CODE BLOCK
 local cSql, oSql, oConnect,xx
